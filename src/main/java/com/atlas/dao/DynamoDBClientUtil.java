@@ -27,4 +27,3 @@ public final class DynamoDBClientUtil {
         return client;
     }
 }
-s
