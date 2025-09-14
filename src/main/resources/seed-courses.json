@@ -1,0 +1,92 @@
+[
+  {
+    "courseId": "C101",
+    "courseName": "Java Programming",
+    "maxSeats": 2,
+    "currentEnrolledCount": 0,
+    "startDate": "2025-09-15",
+    "endDate": "2025-12-15",
+    "latestEnrollmentBy": "2025-09-14"
+  },
+  {
+    "courseId": "C102",
+    "courseName": "Database Management System",
+    "maxSeats": 1,
+    "currentEnrolledCount": 0,
+    "startDate": "2025-09-20",
+    "endDate": "2025-12-20",
+    "latestEnrollmentBy": "2025-09-19"
+  },
+  {
+    "courseId": "C103",
+    "courseName": "Data Structures and Algorithms",
+    "maxSeats": 3,
+    "currentEnrolledCount": 0,
+    "startDate": "2025-10-01",
+    "endDate": "2026-01-15",
+    "latestEnrollmentBy": "2025-09-30"
+  },
+  {
+    "courseId": "C104",
+    "courseName": "Generative AI",
+    "maxSeats": 2,
+    "currentEnrolledCount": 0,
+    "startDate": "2025-10-05",
+    "endDate": "2026-01-30",
+    "latestEnrollmentBy": "2025-10-04"
+  },
+  {
+    "courseId": "C105",
+    "courseName": "Computer Networking and Operating Systems",
+    "maxSeats": 2,
+    "currentEnrolledCount": 0,
+    "startDate": "2025-11-01",
+    "endDate": "2026-02-28",
+    "latestEnrollmentBy": "2025-10-31"
+  },
+  {
+    "courseId": "C106",
+    "courseName": "Full Stack Web Development",
+    "maxSeats": 4,
+    "currentEnrolledCount": 0,
+    "startDate": "2025-09-25",
+    "endDate": "2025-12-25",
+    "latestEnrollmentBy": "2025-09-24"
+  },
+  {
+    "courseId": "C107",
+    "courseName": "Artificial Intelligence Machine Learning",
+    "maxSeats": 3,
+    "currentEnrolledCount": 0,
+    "startDate": "2025-10-10",
+    "endDate": "2026-01-10",
+    "latestEnrollmentBy": "2025-10-09"
+  },
+  {
+    "courseId": "C108",
+    "courseName": "Software Testing",
+    "maxSeats": 2,
+    "currentEnrolledCount": 0,
+    "startDate": "2025-09-18",
+    "endDate": "2025-11-30",
+    "latestEnrollmentBy": "2025-09-17"
+  },
+  {
+    "courseId": "C109",
+    "courseName": "Amazon Web Services",
+    "maxSeats": 5,
+    "currentEnrolledCount": 0,
+    "startDate": "2025-09-01",
+    "endDate": "2025-11-30",
+    "latestEnrollmentBy": "2025-08-31"
+  },
+  {
+    "courseId": "C110",
+    "courseName": "Dockers and Kubernetes",
+    "maxSeats": 3,
+    "currentEnrolledCount": 0,
+    "startDate": "2025-09-30",
+    "endDate": "2026-01-20",
+    "latestEnrollmentBy": "2025-09-29"
+  }
+]
