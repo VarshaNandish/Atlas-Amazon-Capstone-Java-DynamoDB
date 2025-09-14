@@ -8,23 +8,17 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+/*
+ CourseDao is read-only for course metadata in the student platform.
+ Only enrollment and waitlist fields may be modified through atomic DAO methods.
+ Admin changes must be done via offline tooling or an admin module.
+ */
+
 public class CourseDao {
     private final DynamoDbClient client = DynamoDBClientUtil.client();
     private final String table = "Courses";
 
-    public void save(Course c) {
-        Map<String, AttributeValue> item = new HashMap<>();
-        item.put("courseId", AttributeValue.builder().s(c.getCourseId()).build());
-        item.put("courseName", AttributeValue.builder().s(c.getCourseName()).build());
-        item.put("maxSeats", AttributeValue.builder().n(String.valueOf(c.getMaxSeats())).build());
-        item.put("currentEnrolledCount", AttributeValue.builder().n(String.valueOf(c.getCurrentEnrolledCount())).build());
-        item.put("startDate", AttributeValue.builder().s(c.getStartDate() == null ? "" : c.getStartDate()).build());
-        item.put("endDate", AttributeValue.builder().s(c.getEndDate() == null ? "" : c.getEndDate()).build());
-        item.put("latestEnrollmentBy", AttributeValue.builder().s(c.getLatestEnrollmentBy() == null ? "" : c.getLatestEnrollmentBy()).build());
-        item.put("enrolledIds", AttributeValue.builder().l(c.getEnrolledIds().stream().map(id -> AttributeValue.builder().s(id).build()).collect(Collectors.toList())).build());
-        item.put("waitlistIds", AttributeValue.builder().l(c.getWaitlistIds().stream().map(id -> AttributeValue.builder().s(id).build()).collect(Collectors.toList())).build());
-        client.putItem(PutItemRequest.builder().tableName(table).item(item).build());
-    }
 
     public Course getById(String courseId) {
         GetItemResponse r = client.getItem(GetItemRequest.builder().tableName(table).key(Map.of("courseId", AttributeValue.builder().s(courseId).build())).build());
@@ -75,6 +69,32 @@ public class CourseDao {
         }
     }
 
+    /*
+     Replace the enrolledIds list and currentEnrolledCount for a course.
+     This performs a targeted UpdateItem (no full item overwrite).
+     */
+
+    public void replaceEnrolled(String courseId, List<String> newEnrolledIds, int newCount) {
+        Map<String, AttributeValue> key = Map.of("courseId", AttributeValue.builder().s(courseId).build());
+
+        List<AttributeValue> av = newEnrolledIds.stream()
+                .map(id -> AttributeValue.builder().s(id).build())
+                .collect(Collectors.toList());
+
+        Map<String, AttributeValue> vals = Map.of(
+                ":e", AttributeValue.builder().l(av).build(),
+                ":cnt", AttributeValue.builder().n(String.valueOf(newCount)).build()
+        );
+
+        client.updateItem(UpdateItemRequest.builder()
+                .tableName(table)
+                .key(key)
+                .updateExpression("SET enrolledIds = :e, currentEnrolledCount = :cnt")
+                .expressionAttributeValues(vals)
+                .build());
+    }
+
+
     public void addToWaitlist(String courseId, String studentId) {
         Map<String, AttributeValue> key = Map.of("courseId", AttributeValue.builder().s(courseId).build());
         String update = "SET waitlistIds = list_append(if_not_exists(waitlistIds, :empty), :new)";
@@ -90,5 +110,8 @@ public class CourseDao {
         List<AttributeValue> av = newWaitlist.stream().map(s -> AttributeValue.builder().s(s).build()).collect(Collectors.toList());
         client.updateItem(UpdateItemRequest.builder().tableName(table).key(key).updateExpression("SET waitlistIds = :wl").expressionAttributeValues(Map.of(":wl", AttributeValue.builder().l(av).build())).build());
     }
+
+
 }
+
 
