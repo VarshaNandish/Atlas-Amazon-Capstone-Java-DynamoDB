@@ -1,20 +1,29 @@
 package com.atlas.service;
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
-import com.atlas.dao.LogDao;
 import com.atlas.dao.StudentDao;
+import com.atlas.dao.LogDao;
+import com.atlas.model.Student;
 import com.atlas.exception.AuthenticationException;
 import com.atlas.exception.StudentNotFoundException;
-import com.atlas.model.Student;
 
 import java.util.UUID;
 
+/**
+ * StudentService depends on DAO interfaces (constructor injection).
+ */
+
 public class StudentService {
-    private final StudentDao studentDao = new StudentDao();
-    private final LogDao logDao = new LogDao();
+    private final StudentDao studentDao;
+    private final LogDao logDao;
+
+    // constructor injection only (no default wiring here)
+    public StudentService(StudentDao studentDao, LogDao logDao) {
+        this.studentDao = studentDao;
+        this.logDao = logDao;
+    }
 
     public void register(String id, String name, String email, String rawPassword) {
-
         if (id == null || id.isBlank()) throw new IllegalArgumentException("StudentId required");
         if (name == null || name.isBlank()) throw new IllegalArgumentException("Name required");
         if (email == null || email.isBlank()) throw new IllegalArgumentException("Email required");
@@ -30,12 +39,10 @@ public class StudentService {
     }
 
     public String login(String email, String rawPassword) {
-
         if (email == null || rawPassword == null) throw new AuthenticationException("Invalid credentials");
-        email = email.trim().toLowerCase(); // normalize
+        email = email.trim().toLowerCase();
 
         Student s = studentDao.findByEmail(email);
-
         if (s == null) throw new AuthenticationException("Invalid credentials");
         BCrypt.Result r = BCrypt.verifyer().verify(rawPassword.toCharArray(), s.getPasswordHash());
         if (!r.verified) throw new AuthenticationException("Invalid credentials");
@@ -43,7 +50,6 @@ public class StudentService {
         logDao.append(UUID.randomUUID().toString(), s.getId(), "LOGIN", null);
         return token;
     }
-
 
     public String profile(String id) {
         Student s = studentDao.getById(id);
@@ -58,5 +64,4 @@ public class StudentService {
                 s.getWaitlistedCourseIds().toString()
         );
     }
-
 }
