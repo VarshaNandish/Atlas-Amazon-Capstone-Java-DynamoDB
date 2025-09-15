@@ -21,7 +21,6 @@ public class Student {
         this.passwordHash = Objects.requireNonNull(passwordHash);
     }
 
-    // getters and setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getName() { return name; }
@@ -33,7 +32,6 @@ public class Student {
 
     @Override
     public String toString() {
-        return id + " | " + name + " | " + email;
+        return String.format("ID: %s | Name: %s | Email: %s", id, name, email);
     }
 }
-

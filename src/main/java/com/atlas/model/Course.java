@@ -23,7 +23,6 @@ public class Course {
         this.maxSeats = maxSeats;
     }
 
-    // getters and setters
     public String getCourseId() { return courseId; }
     public String getCourseName() { return courseName; }
     public int getMaxSeats() { return maxSeats; }
@@ -40,6 +39,8 @@ public class Course {
 
     @Override
     public String toString() {
-        return String.format("%s | %s | enrolled: %d/%d | enrollBy: %s", courseId, courseName, currentEnrolledCount, maxSeats, latestEnrollmentBy);
+        return String.format("%s | %s | enrolled: %d/%d | enrollBy: %s",
+                courseId, courseName, currentEnrolledCount, maxSeats,
+                (latestEnrollmentBy == null || latestEnrollmentBy.isEmpty() ? "-" : latestEnrollmentBy));
     }
 }

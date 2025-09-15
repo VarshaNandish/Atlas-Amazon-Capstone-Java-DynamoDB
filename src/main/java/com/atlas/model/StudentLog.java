@@ -17,11 +17,9 @@ public class StudentLog {
         this.timestamp = timestamp;
     }
 
-    // getters
     public String getLogId() { return logId; }
     public String getStudentId() { return studentId; }
     public String getAction() { return action; }
     public String getCourseId() { return courseId; }
     public long getTimestamp() { return timestamp; }
 }
-
