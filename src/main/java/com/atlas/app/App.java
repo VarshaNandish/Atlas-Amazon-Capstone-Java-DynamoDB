@@ -5,30 +5,39 @@ import com.atlas.service.CourseService;
 import com.atlas.service.EnrollmentService;
 import com.atlas.service.SessionStore;
 import com.atlas.service.StudentService;
+import com.atlas.repository.DynamoStudentDao;
+import com.atlas.repository.DynamoCourseDao;
+import com.atlas.repository.DynamoLogDao;
 
 import java.util.List;
 import java.util.Scanner;
 
 public class App {
-    private static final StudentService studentService = new StudentService();
-    private static final CourseService courseService = new CourseService();
-    private static final EnrollmentService enrollmentService = new EnrollmentService();
-
     public static void main(String[] args) {
-        System.out.println("======= Welcome to Atlas Academy \uD83C\uDF93 =======");
-        System.out.println("======= Register for courses, manage your enrollments, and track your waitlists !! =======");
+        DynamoStudentDao studentDaoImpl = new DynamoStudentDao();
+        DynamoCourseDao courseDaoImpl = new DynamoCourseDao();
+        DynamoLogDao logDaoImpl = new DynamoLogDao();
+
+        StudentService studentService = new StudentService(studentDaoImpl, logDaoImpl);
+        CourseService courseService = new CourseService(courseDaoImpl);
+        EnrollmentService enrollmentService = new EnrollmentService(studentDaoImpl, courseDaoImpl, logDaoImpl);
+
+        System.out.println("=== Welcome to Atlas Academy 🎓 ===");
+        System.out.println("=== Student Course Registration System ===");
+
         Scanner sc = new Scanner(System.in);
         while (true) {
             System.out.println("\n1) Sign Up  2) Login  3) Exit");
             System.out.print("Choose: ");
             String ch = sc.nextLine().trim();
             try {
-                if ("1".equals(ch)) doSignup(sc);
+                if ("1".equals(ch)) doSignup(sc, studentService);
                 else if ("2".equals(ch)) {
-                    String token = doLogin(sc);
-                    if (token != null) studentMenu(sc, token);
+                    String token = doLogin(sc, studentService);
+                    if (token != null) studentMenu(sc, token, studentService, courseService, enrollmentService);
                 } else if ("3".equals(ch)) {
-                    System.out.println("Session ended. See you next time."); return;
+                    System.out.println("Goodbye — thanks for using Atlas Academy!");
+                    return;
                 } else System.out.println("Invalid option");
             } catch (Exception ex) {
                 System.out.println("Error: " + ex.getMessage());
@@ -36,8 +45,7 @@ public class App {
         }
     }
 
-
-    private static void doSignup(Scanner sc) {
+    private static void doSignup(Scanner sc, StudentService studentService) {
         System.out.print("StudentId: "); String id = sc.nextLine().trim();
         System.out.print("Name: "); String name = sc.nextLine().trim();
         System.out.print("Email: "); String email = sc.nextLine().trim();
@@ -46,7 +54,7 @@ public class App {
         System.out.println("Account created successfully. You may now log in to continue.");
     }
 
-    private static String doLogin(Scanner sc) {
+    private static String doLogin(Scanner sc, StudentService studentService) {
         System.out.print("Email: "); String email = sc.nextLine().trim();
         System.out.print("Password: "); String pwd = sc.nextLine().trim();
         String token = studentService.login(email, pwd);
@@ -54,8 +62,7 @@ public class App {
         return token;
     }
 
-
-    private static void studentMenu(Scanner sc, String token) {
+    private static void studentMenu(Scanner sc, String token, StudentService studentService, CourseService courseService, EnrollmentService enrollmentService) {
         String studentId = SessionStore.getStudentId(token);
         if (studentId == null) { System.out.println("Session invalid."); return; }
         while (true) {
