@@ -12,10 +12,17 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class EnrollmentService {
-    private final StudentDao studentDao = new StudentDao();
-    private final CourseDao courseDao = new CourseDao();
-    private final LogDao logDao = new LogDao();
+    private final StudentDao studentDao;
+    private final CourseDao courseDao;
+    private final LogDao logDao;
     private final DateTimeFormatter df = DateTimeFormatter.ISO_LOCAL_DATE;
+
+    // constructor injection only
+    public EnrollmentService(StudentDao studentDao, CourseDao courseDao, LogDao logDao) {
+        this.studentDao = studentDao;
+        this.courseDao = courseDao;
+        this.logDao = logDao;
+    }
 
     public void enroll(String studentId, String courseId) {
         Student s = studentDao.getById(studentId);
@@ -66,7 +73,7 @@ public class EnrollmentService {
             if (removed) {
                 int newCount = Math.max(0, fresh.getCurrentEnrolledCount() - 1);
                 List<String> newEnrolled = new ArrayList<>(fresh.getEnrolledIds());
-                // Persist only the enrollment-related fields (no full item save)
+                // Persist only the enrollment-related fields (no full item overwrite)
                 courseDao.replaceEnrolled(courseId, newEnrolled, newCount);
             }
             studentDao.save(s);
@@ -74,7 +81,6 @@ public class EnrollmentService {
             promoteFromWaitlist(courseId);
             return;
         }
-
 
         // if on waitlist
         boolean wasWaitlisted = s.getWaitlistedCourseIds().remove(courseId);
