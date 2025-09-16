@@ -7,7 +7,6 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 public class DynamoStudentDao implements StudentDao {
     private final DynamoDbClient client = DynamoDBClientUtil.client();
@@ -18,7 +17,11 @@ public class DynamoStudentDao implements StudentDao {
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("id", AttributeValue.builder().s(s.getId()).build());
         item.put("name", AttributeValue.builder().s(s.getName()).build());
-        item.put("email", AttributeValue.builder().s(s.getEmail()).build());
+
+        // normalize email before storing (trim + lowercase)
+        String normalizedEmail = s.getEmail() == null ? "" : s.getEmail().trim().toLowerCase();
+        item.put("email", AttributeValue.builder().s(normalizedEmail).build());
+
         item.put("passwordHash", AttributeValue.builder().s(s.getPasswordHash()).build());
         item.put("enrolledCourseIds", AttributeValue.builder().l(
                 s.getEnrolledCourseIds().stream().map(id -> AttributeValue.builder().s(id).build()).collect(Collectors.toList())).build());
@@ -35,9 +38,9 @@ public class DynamoStudentDao implements StudentDao {
                 .build());
         Map<String, AttributeValue> it = resp.item();
         if (it == null || it.isEmpty()) return null;
-        String name = it.get("name").s();
-        String email = it.get("email").s();
-        String hash = it.get("passwordHash").s();
+        String name = it.containsKey("name") ? it.get("name").s() : "";
+        String email = it.containsKey("email") ? it.get("email").s() : "";
+        String hash = it.containsKey("passwordHash") ? it.get("passwordHash").s() : "";
         Student s = new Student(id, name, email, hash);
         if (it.containsKey("enrolledCourseIds")) s.getEnrolledCourseIds().addAll(it.get("enrolledCourseIds").l().stream().map(AttributeValue::s).collect(Collectors.toList()));
         if (it.containsKey("waitlistedCourseIds")) s.getWaitlistedCourseIds().addAll(it.get("waitlistedCourseIds").l().stream().map(AttributeValue::s).collect(Collectors.toList()));
@@ -46,11 +49,14 @@ public class DynamoStudentDao implements StudentDao {
 
     @Override
     public Student findByEmail(String email) {
-        ScanResponse resp = client.scan(ScanRequest.builder().tableName(table)
+        if (email == null) return null;
+        String normalized = email.trim().toLowerCase();
+        ScanResponse resp = client.scan(ScanRequest.builder()
+                .tableName(table)
                 .filterExpression("email = :e")
-                .expressionAttributeValues(Map.of(":e", AttributeValue.builder().s(email).build()))
+                .expressionAttributeValues(Map.of(":e", AttributeValue.builder().s(normalized).build()))
                 .build());
-        if (resp.count() == 0) return null;
+        if (resp.count() == 0 || resp.items().isEmpty()) return null;
         String id = resp.items().get(0).get("id").s();
         return getById(id);
     }
