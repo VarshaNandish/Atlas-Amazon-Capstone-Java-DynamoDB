@@ -14,6 +14,7 @@ import java.util.Scanner;
 
 public class App {
     public static void main(String[] args) {
+        // explicit wiring (composition root)
         DynamoStudentDao studentDaoImpl = new DynamoStudentDao();
         DynamoCourseDao courseDaoImpl = new DynamoCourseDao();
         DynamoLogDao logDaoImpl = new DynamoLogDao();
