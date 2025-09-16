@@ -64,10 +64,21 @@ public class App {
     }
 
     private static void studentMenu(Scanner sc, String token, StudentService studentService, CourseService courseService, EnrollmentService enrollmentService) {
+        // Check token validity (enforces expiry)
+        if (!SessionStore.isValid(token)) {
+            System.out.println("Session invalid or expired. Please login again.");
+            return;
+        }
         String studentId = SessionStore.getStudentId(token);
         if (studentId == null) { System.out.println("Session invalid."); return; }
         while (true) {
-            System.out.println("\n--- Student Menu ---");
+
+            // enforce expiry before each interaction
+            if (!SessionStore.isValid(token)) {
+                System.out.println("Session expired. Please login again.");
+                return;
+            }
+            System.out.println("\n----- Student Menu -----");
             System.out.println("1) View courses  2) View profile  3) Enroll  4) Drop  5) Logout");
             System.out.print("Choose: ");
             String ch = sc.nextLine().trim();
@@ -81,11 +92,11 @@ public class App {
                 } else if ("3".equals(ch)) {
                     System.out.print("CourseId: "); String cid = sc.nextLine().trim();
                     enrollmentService.enroll(studentId, cid);
-                    System.out.println("Enroll attempt processed.");
+                    System.out.println("Enroll attempt processed. Please view your profile details to check the updated status.");
                 } else if ("4".equals(ch)) {
                     System.out.print("CourseId: "); String cid = sc.nextLine().trim();
                     enrollmentService.drop(studentId, cid);
-                    System.out.println("Drop processed.");
+                    System.out.println("Drop processed. Please view your profile details to check the updated status.");
                 } else if ("5".equals(ch)) {
                     SessionStore.invalidate(token);
                     System.out.println("You have been logged out. See you soon!");
