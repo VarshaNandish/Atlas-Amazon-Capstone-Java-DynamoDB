@@ -37,10 +37,18 @@ public class Course {
     public String getLatestEnrollmentBy() { return latestEnrollmentBy; }
     public void setLatestEnrollmentBy(String latestEnrollmentBy) { this.latestEnrollmentBy = latestEnrollmentBy; }
 
+    /**
+     * Display-friendly string used by CLI.
+     * Shows: courseId | courseName | enrolled: current/max | remaining: X | startDate | endDate | enrollBy
+     * Empty dates are shown as '-'.
+     */
     @Override
     public String toString() {
-        return String.format("%s | %s | enrolled: %d/%d | enrollBy: %s",
-                courseId, courseName, currentEnrolledCount, maxSeats,
-                (latestEnrollmentBy == null || latestEnrollmentBy.isEmpty() ? "-" : latestEnrollmentBy));
+        String start = (startDate == null || startDate.isEmpty()) ? "-" : startDate;
+        String end = (endDate == null || endDate.isEmpty()) ? "-" : endDate;
+        String enrollBy = (latestEnrollmentBy == null || latestEnrollmentBy.isEmpty()) ? "-" : latestEnrollmentBy;
+        int remaining = Math.max(0, maxSeats - currentEnrolledCount);
+        return String.format("%s | %s | enrolled seats: %d/%d | remaining seats: %d | start date: %s | end date: %s | enrollBy date: %s",
+                courseId, courseName, currentEnrolledCount, maxSeats, remaining, start, end, enrollBy);
     }
 }
