@@ -15,12 +15,18 @@ public class DynamoLogDao implements LogDao {
 
     @Override
     public void append(String logId, String studentId, String action, String courseId) {
+        // store ISO-8601 timestamp only under "timestamp"
+        String iso = Instant.now().toString(); // e.g. 2025-09-16T12:34:56.789Z
+
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("logId", AttributeValue.builder().s(logId).build());
         item.put("studentId", AttributeValue.builder().s(studentId).build());
         item.put("action", AttributeValue.builder().s(action).build());
         if (courseId != null) item.put("courseId", AttributeValue.builder().s(courseId).build());
-        item.put("timestamp", AttributeValue.builder().n(String.valueOf(Instant.now().toEpochMilli())).build());
+
+        // only ISO string under 'timestamp'
+        item.put("timestamp", AttributeValue.builder().s(iso).build());
+
         client.putItem(PutItemRequest.builder().tableName(table).item(item).build());
     }
 }
