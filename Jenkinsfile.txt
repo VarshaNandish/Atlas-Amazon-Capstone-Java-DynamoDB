@@ -1,34 +1,49 @@
 pipeline {
-  agent any
+    agent any
 
-  stages {
-    stage('Checkout') {
-      steps { checkout scm }
-    }
-
-    stage('Unit Tests') {
-      steps { sh 'mvn -B -DskipITs=true test' }
-      post { always { junit 'target/surefire-reports/*.xml' } }
-    }
-
-    stage('Integration Tests (DynamoDB Local)') {
-      steps {
-        // start DynamoDB Local container (requires Docker Desktop on host)
-        sh 'docker run -d --name dynamodb-local -p 8000:8000 amazon/dynamodb-local'
-        sh 'sleep 3'
-        sh 'mvn -B -DskipITs=false test'
-      }
-      post {
-        always {
-          sh 'docker rm -f dynamodb-local || true'
-          junit 'target/surefire-reports/*.xml'
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
         }
-      }
-    }
 
-    stage('Package') {
-      steps { sh 'mvn -B -DskipTests package' }
-      post { success { archiveArtifacts artifacts: "target/*.jar", fingerprint: true } }
+        stage('Unit Tests') {
+            steps {
+                bat 'mvn -B -DskipITs=true test'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('Integration Tests (DynamoDB Local)') {
+            steps {
+                // Start DynamoDB Local container (requires Docker Desktop on host)
+                bat 'docker run -d --name dynamodb-local -p 8000:8000 amazon/dynamodb-local'
+                bat 'timeout /t 3'
+                bat 'mvn -B -DskipITs=false test'
+            }
+            post {
+                always {
+                    // Stop container even if tests fail
+                    bat 'docker rm -f dynamodb-local || exit 0'
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                bat 'mvn -B -DskipTests package'
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                }
+            }
+        }
     }
-  }
 }
