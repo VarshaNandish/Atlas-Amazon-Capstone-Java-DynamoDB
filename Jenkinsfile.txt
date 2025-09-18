@@ -20,20 +20,16 @@ pipeline {
         }
 
         stage('Integration Tests (DynamoDB Local)') {
-            steps {
-                // Start DynamoDB Local container (requires Docker Desktop on host)
-                bat 'docker run -d --name dynamodb-local -p 8000:8000 amazon/dynamodb-local'
-                bat 'timeout /t 3'
-                bat 'mvn -B -DskipITs=false test'
-            }
-            post {
-                always {
-                    // Stop container even if tests fail
-                    bat 'docker rm -f dynamodb-local || exit 0'
-                    junit 'target/surefire-reports/*.xml'
-                }
-            }
+    steps {
+        // Reuse existing DynamoDB running on 8000
+        bat 'mvn -B -DskipITs=false test'
+    }
+    post {
+        always {
+            junit 'target/surefire-reports/*.xml'
         }
+    }
+}
 
         stage('Package') {
             steps {
