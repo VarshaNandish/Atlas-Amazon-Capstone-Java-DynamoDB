@@ -1,5 +1,6 @@
 package com.atlas.app;
 
+
 import com.atlas.model.Course;
 import com.atlas.service.CourseService;
 import com.atlas.service.EnrollmentService;
@@ -38,6 +39,7 @@ public class App {
                     if (token != null) studentMenu(sc, token, studentService, courseService, enrollmentService);
                 } else if ("3".equals(ch)) {
                     System.out.println("Goodbye — thanks for using Atlas Academy!");
+                    com.atlas.repository.DynamoDBClientUtil.closeClient();
                     return;
                 } else System.out.println("Invalid option");
             } catch (Exception ex) {
