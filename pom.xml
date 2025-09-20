@@ -173,6 +173,7 @@
                         <!-- include your integration test name patterns -->
                         <include>**/*IntegrationTest.java</include>
                         <include>**/*IT.java</include>
+                        <include>**/*IntegrationTests.java</include>
                     </includes>
                 </configuration>
                 <executions>
