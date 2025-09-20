@@ -2,60 +2,68 @@ pipeline {
   agent any
 
   environment {
-    // Jenkins will run inside docker-compose network; DynamoDB host is service name
-    DYNAMODB_ENDPOINT = "http://dynamodb-local:8000"
+    DYNAMODB_ENDPOINT = "http://dynamodb-local:8000"   // adjust if needed
     IMAGE_NAME = "atlas-app:${env.BUILD_ID}"
   }
 
   stages {
     stage('Checkout') {
-      steps {
-        checkout scm
-      }
+      steps { checkout scm }
     }
 
     stage('Unit Tests') {
       steps {
-        sh 'mvn -B -DskipITs=true test'
+        script {
+          docker.image('maven:3.9.2-eclipse-temurin-17').inside {
+            sh 'mvn -B -DskipITs=true test'
+          }
+        }
       }
       post { always { junit 'target/surefire-reports/*.xml' } }
     }
 
     stage('Integration Tests') {
       steps {
-        // integration tests should pick up DYNAMODB_ENDPOINT from environment
-        sh 'mvn -B -DskipITs=false test'
+        script {
+          docker.image('maven:3.9.2-eclipse-temurin-17').inside {
+            // ensure your tests use DYNAMODB_ENDPOINT (env injected by Jenkins)
+            sh 'mvn -B -DskipITs=false verify'
+          }
+        }
       }
-      post { always { junit 'target/surefire-reports/*.xml' } }
+      post { always { junit 'target/failsafe-reports/*.xml' } }
+    }
+
+    stage('Package') {
+      steps {
+        script {
+          docker.image('maven:3.9.2-eclipse-temurin-17').inside {
+            sh 'mvn -B -DskipTests package'
+          }
+        }
+      }
+      post { success { archiveArtifacts artifacts: 'target/*-jar-with-dependencies.jar', fingerprint: true } }
     }
 
     stage('Build Docker Image') {
+      when { expression { fileExists('Dockerfile') } }
       steps {
-        // build docker image on host docker daemon (requires docker.sock mount in jenkins container)
+        // requires docker daemon access from this node (docker.sock mounted into Jenkins container)
         sh "docker build -t ${IMAGE_NAME} ."
       }
     }
 
     stage('Run App Container (smoke)') {
+      when { expression { fileExists('Dockerfile') } }
       steps {
-        // run briefly; map container port 8080 to a random host port to avoid collisions
-        sh "docker run -d --rm --name atlas-smoke -p 0:8080 ${IMAGE_NAME}"
-        // simple wait & health check - adjust as needed
+        // run with random host port mapping, then print mapped port
+        sh "docker rm -f atlas-smoke || true"
+        sh "docker run -d --rm --name atlas-smoke -P ${IMAGE_NAME}"
+        // give container a sec, then show host port mapped to container 8080
         sh "sleep 5"
-        // optional: curl health endpoint (if your app exposes one). Comment out if none.
-        // sh "curl -f http://localhost:8080/actuator/health || true"
+        sh "docker port atlas-smoke 8080 || true"
       }
-      post {
-        always {
-          sh "docker rm -f atlas-smoke || true"
-        }
-      }
-    }
-
-    stage('Archive') {
-      steps {
-        archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-      }
+      post { always { sh "docker rm -f atlas-smoke || true" } }
     }
   }
 
