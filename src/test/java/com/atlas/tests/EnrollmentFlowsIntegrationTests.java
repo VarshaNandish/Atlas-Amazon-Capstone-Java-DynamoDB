@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class EnrollmentFlowsIT {
+public class EnrollmentFlowsIntegrationTests {
 
     private DynamoDbClient client;
     private DynamoStudentDao studentDao;
