@@ -62,29 +62,6 @@ pipeline {
       }
     }
 
-    // <<<< BUILD DOCKER IMAGE STAGE: must be *inside* stages { } >>>>
-    stage('Build Docker Image') {
-      steps {
-        script {
-          // image name & tag
-          def imageName = "mydockerhubuser/atlas-capstone"
-          def imageTag = "${env.BRANCH_NAME ?: 'local'}-${env.BUILD_NUMBER ?: '0'}"
-
-          // Build the image; ensure the Jenkins agent has docker installed and the user can run docker.
-          sh "docker build -t ${imageName}:${imageTag} ."
-
-          // optional: show local images (harmless if grep finds nothing)
-          sh "docker images | grep atlas-capstone || true"
-
-          // optional push example (commented out; use with credentials and uncomment to enable)
-          // withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          //   sh "echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin"
-          //   sh "docker push ${imageName}:${imageTag}"
-          // }
-        }
-      }
-    }
-
   } // end stages
 
   post {
