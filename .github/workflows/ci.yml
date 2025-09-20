@@ -1,86 +1,57 @@
-name: CI
+name: CI → Test → Build & Push → Deploy
+
+permissions:
+  contents: read
+  packages: write
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - master
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
-    services:
-      dynamodb:
-        image: amazon/dynamodb-local:latest
-        # port mapping inside Actions runner: container 8000 -> host 8000
-        ports:
-          - 8000:8000
-        options: >-
-          --health-cmd='curl -sS http://localhost:8000 >/dev/null || exit 1'
-          --health-interval=2s --health-timeout=2s --health-retries=10
-
-    env:
-      # Integration tests should read this env var to know where DDB is
-      DYNAMODB_ENDPOINT: http://localhost:8000
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - name: Set up Java 17
+        uses: actions/setup-java@v3
         with:
-          distribution: temurin
+          distribution: 'temurin'
           java-version: '17'
           cache: 'maven'
 
-      - name: Cache Maven local repo
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-m2-
+      - name: Build & test
+        run: mvn -B clean test
 
-      - name: Wait for DynamoDB service to be healthy
-        # optional safety wait - service health is already defined; this is extra
+      # 👇 Authenticate to GCP
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      # 👇 Build and push to Artifact Registry
+      - name: Configure Docker to use Artifact Registry
         run: |
-          for i in {1..10}; do
-            curl -sS http://localhost:8000 || sleep 1
-          done
+          gcloud auth configure-docker us-central1-docker.pkg.dev
 
-      - name: Run unit tests
-        run: mvn -B -DskipITs=true test
-        # If you use JUnit XML files and want to display them in GH, publish with upload-artifact or use check runner integrations
+      - name: Build and push Docker image to Artifact Registry
+        run: |
+          IMAGE="us-central1-docker.pkg.dev/pure-sunlight-469209-s3/student-course-repo/student-course-app:latest"
+          docker build -t $IMAGE .
+          docker push $IMAGE
 
-      - name: Run integration tests (failsafe)
-        run: mvn -B -DskipITs=false verify
-
-      - name: Build (package)
-        run: mvn -B -DskipTests package
-
-      - name: Upload built jar
-        uses: actions/upload-artifact@v4
-        with:
-          name: atlas-capstone-jar
-          path: target/*.jar
-
-      # Optional: build & push Docker image to Docker Hub (uncomment + set secrets)
-      #- name: Log in to DockerHub
-      #  uses: docker/login-action@v2
-      #  with:
-      #    username: ${{ secrets.DOCKERHUB_USERNAME }}
-      #    password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      #
-      #- name: Build and push Docker image
-      #  uses: docker/build-push-action@v4
-      #  with:
-      #    push: true
-      #    tags: ${{ secrets.DOCKERHUB_USERNAME }}/atlas-app:${{ github.sha }}
-
-      - name: Upload test reports (optional)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports
-          path: target/*reports*/**/*.xml
+      # 👇 Deploy to Cloud Run
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy student-course-app \
+            --image=us-central1-docker.pkg.dev/pure-sunlight-469209-s3/student-course-repo/student-course-app:latest \
+            --platform=managed \
+            --region=us-central1 \
+            --allow-unauthenticated
