@@ -58,11 +58,8 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>2.0.7</version> <!-- or a matching minor version to your slf4j-api if needed -->
+            <version>2.0.7</version>
         </dependency>
-
-
-
     </dependencies>
 
     <build>
@@ -87,13 +84,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Surefire for tests -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version>
-            </plugin>
-
+            <!-- Jar plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -107,7 +98,7 @@
                 </configuration>
             </plugin>
 
-
+            <!-- Assembly: build jar-with-dependencies -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -133,22 +124,7 @@
                 </executions>
             </plugin>
 
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.1.2</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- surefire: unit tests only -->
+            <!-- Surefire: unit tests only -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -156,14 +132,14 @@
                 <configuration>
                     <excludes>
                         <!-- exclude integration-style tests from unit test run -->
+                        <exclude>**/*IT.java</exclude>
                         <exclude>**/*IntegrationTest.java</exclude>
                         <exclude>**/*IntegrationTests.java</exclude>
-                        <exclude>**/*IT.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>
 
-            <!-- failsafe: run integration tests -->
+            <!-- Failsafe: integration tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -171,8 +147,8 @@
                 <configuration>
                     <includes>
                         <!-- include your integration test name patterns -->
-                        <include>**/*IntegrationTest.java</include>
                         <include>**/*IT.java</include>
+                        <include>**/*IntegrationTest.java</include>
                         <include>**/*IntegrationTests.java</include>
                     </includes>
                 </configuration>
@@ -185,8 +161,6 @@
                     </execution>
                 </executions>
             </plugin>
-
-
         </plugins>
     </build>
 </project>

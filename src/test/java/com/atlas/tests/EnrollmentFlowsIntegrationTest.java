@@ -78,7 +78,7 @@ public class EnrollmentFlowsIntegrationTest {
     }
 
     @Test
-    void integration_signup_and_login() {
+    public void integration_signup_and_login() {
         String id = "S" + UUID.randomUUID().toString().substring(0, 8);
         String email = id + "@example.com";
         studentService.register(id, "Alice", email, "Secret1");
@@ -87,7 +87,7 @@ public class EnrollmentFlowsIntegrationTest {
     }
 
     @Test
-    void integration_enroll_whenSeatAvailable() {
+    public void integration_enroll_whenSeatAvailable() {
         String studentId = "S" + UUID.randomUUID().toString().substring(0, 8);
         String email = studentId + "@example.com";
         studentService.register(studentId, "Bob", email, "Secret2");
@@ -102,7 +102,7 @@ public class EnrollmentFlowsIntegrationTest {
     }
 
     @Test
-    void integration_enroll_and_waitlist() {
+    public void integration_enroll_and_waitlist() {
         String s1 = "S" + UUID.randomUUID().toString().substring(0, 8);
         String s2 = "S" + UUID.randomUUID().toString().substring(0, 8);
         studentService.register(s1, "User1", s1 + "@ex.com", "Pass123");
@@ -121,7 +121,7 @@ public class EnrollmentFlowsIntegrationTest {
     }
 
     @Test
-    void integration_drop_promotes_from_waitlist() {
+    public void integration_drop_promotes_from_waitlist() {
         String s1 = "S" + UUID.randomUUID().toString().substring(0, 8);
         String s2 = "S" + UUID.randomUUID().toString().substring(0, 8);
         studentService.register(s1, "Dropper", s1 + "@ex.com", "Pass123");
@@ -140,7 +140,7 @@ public class EnrollmentFlowsIntegrationTest {
     }
 
     @Test
-    void integration_duplicatePrevention_and_limits() {
+    public void integration_duplicatePrevention_and_limits() {
         // register a fresh student
         String sid = "S" + UUID.randomUUID().toString().substring(0, 8);
         studentService.register(sid, "LimitUser", sid + "@ex.com", "Pass123");
