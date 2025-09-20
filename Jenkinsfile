@@ -63,6 +63,28 @@ pipeline {
     }
   }
 
+     stage('Build Docker Image') {
+  steps {
+    script {
+      // image name & tag
+      def imageName = "mydockerhubuser/atlas-capstone"
+      def imageTag = "${env.BRANCH_NAME ?: 'local'}-${env.BUILD_NUMBER ?: '0'}"
+
+      sh "docker build -t ${imageName}:${imageTag} ."
+
+      // optional: show local images
+      sh "docker images | grep atlas-capstone || true"
+
+      // optional: push to registry (uncomment if you add credentials)
+      // withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+      //   sh "echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin"
+      //   sh "docker push ${imageName}:${imageTag}"
+      // }
+    }
+  }
+}
+
+
   post {
     success { echo "Build succeeded" }
     failure { echo "Build failed" }
