@@ -38,7 +38,7 @@ public class EnrollmentFlowsIntegrationTest {
     private CourseService courseService;
 
     @BeforeAll
-    void setup() {
+    public void setup() {
         try {
             client = DynamoDBClientUtil.client();
             client.listTables(); // quick check
