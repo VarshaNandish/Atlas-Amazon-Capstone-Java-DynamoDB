@@ -1,14 +1,23 @@
-# build stage
-FROM maven:3.9.4-eclipse-temurin-17 AS build
+# Stage 1: Build the jar with Maven
+FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /app
-COPY pom.xml .
+
+# copy pom and source to leverage layer caching
+COPY pom.xml ./
 COPY src ./src
+
+# build jar (assembly creates jar-with-dependencies)
 RUN mvn -B -DskipTests package
 
-# runtime stage (smaller)
-FROM eclipse-temurin:17-jre
+# Stage 2: Minimal runtime image
+FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
-# copy jar from build stage (adjust name if different)
-COPY --from=build /app/target/atlas-capstone-1.0.0.jar /app/app.jar
-EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+
+# copy the assembled jar from the build stage
+# pattern matches the jar-with-dependencies produced by your assembly plugin
+COPY --from=build /app/target/*-jar-with-dependencies.jar app.jar
+
+# If your app needs environment vars or ports, expose here (console app needs none)
+# EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
