@@ -1,91 +1,51 @@
-name: Build and Push Docker Image
+name: build-and-test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
-  workflow_dispatch:
-
-permissions:
-  contents: read
-  packages: write
+    branches: [ main ]
 
 jobs:
-  build-and-push:
+  build-and-test:
     runs-on: ubuntu-latest
-
     services:
       dynamodb:
-        image: amazon/dynamodb-local:1.21.0
+        image: amazon/dynamodb-local:latest
         ports:
           - 8000:8000
+        options: >-
+          --health-cmd='curl -sS http://localhost:8000/ >/dev/null || exit 1'
+          --health-interval=2s
+          --health-timeout=2s
+          --health-retries=10
+
+    env:
+      # Make your code read this to point the SDK to the service
+      DYNAMODB_ENDPOINT: http://localhost:8000
+      # recommended to tell code it's CI
+      CI: "true"
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java 21
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '21'
-          cache: 'maven'
+          java-version: '17'
+          distribution: temurin
 
-      - name: Wait for DynamoDB
-        run: |
-          sleep 30
-          for i in {1..5}; do
-            if curl -s --connect-timeout 3 http://localhost:8000/ >/dev/null 2>&1; then
-              echo "DynamoDB Local ready"
-              break
-            fi
-            sleep 5
-          done
+      - name: Maven - unit tests
+        run: mvn -B -DskipITs=true test
 
-      - name: Build application
-        run: mvn clean package -DskipTests
+      - name: Maven - integration tests (failsafe)
+        # failsafe will look for your IntegrationTest/IT classes
+        run: mvn -B -DskipITs=false verify
 
-      - name: Verify JAR
-        run: |
-          ls -la target/
-          test -f target/iot-smarthome-dashboard-1.0-SNAPSHOT.jar
-
-      - name: Build Docker image
-        run: |
-          docker build -t iot-smarthome-dashboard:latest .
-          docker build -t iot-smarthome-dashboard:v${{ github.run_number }} .
-
-      - name: Test Docker image
-        run: |
-          docker images | grep iot-smarthome-dashboard
-          docker create --name test-container iot-smarthome-dashboard:latest
-          docker rm test-container
-
-      - name: Create version number
-        id: version
-        run: |
-          # Create semantic version: 1.01, 1.02, ..., 1.99, 2.01, 2.02, etc.
-          MAJOR=$(( (${{ github.run_number }} - 1) / 99 + 1 ))
-          MINOR=$(( (${{ github.run_number }} - 1) % 99 + 1 ))
-          VERSION="$MAJOR.$(printf '%02d' $MINOR)"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Created version: $VERSION"
-
-      - name: Log in to GitHub Container Registry
-        if: github.event_name != 'pull_request'
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Tag Docker image
-        if: github.event_name != 'pull_request'
-        run: |
-          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          docker tag iot-smarthome-dashboard:latest ghcr.io/$REPO_OWNER/iot-smart-home:latest
-          docker tag iot-smarthome-dashboard:latest ghcr.io/$REPO_OWNER/iot-smart-home:v${{ steps.version.outputs.version }}
-
-      - name: Push Docker image to GHCR
-        if: github.event_name != 'pull_request'
-        run: |
-          REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          docker push ghcr.io/$REPO_OWNER/iot-smart-home:latest
-          docker push ghcr.io/$REPO_OWNER/iot-smart-home:v${{ steps.version.outputs.version }}
+      - name: Archive test reports (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-test-reports
+          path: target/*reports*/**/*.xml
