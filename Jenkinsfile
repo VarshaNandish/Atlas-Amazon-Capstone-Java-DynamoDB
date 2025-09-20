@@ -10,21 +10,12 @@ pipeline {
       steps { checkout scm }
     }
 
-    stage('Unit Tests') {
-  steps {
-    sh "${tool 'Maven3'}/bin/mvn -B -DskipITs=true test"
-  }
-  post {
-    always {
-      // debug: list report files and show first lines to help diagnose empty results
-      sh "ls -la target/surefire-reports || true"
-      sh "for f in target/surefire-reports/*.xml; do echo '----' \\$f; sed -n '1,80p' \\$f || true; done || true"
-
-      // archive results but allow empty so pipeline doesn't fail
-      junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: true, keepLongStdio: true
+    stage('Integration Tests') {
+      steps {
+        sh "mvn -B -DskipITs=false verify"
+      }
+      post { always { junit 'target/failsafe-reports/*.xml' } }
     }
-  }
-}
 
     stage('Integration Tests') {
   steps {
