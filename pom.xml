@@ -157,6 +157,7 @@
                     <excludes>
                         <!-- exclude integration-style tests from unit test run -->
                         <exclude>**/*IntegrationTest.java</exclude>
+                        <exclude>**/*IntegrationTests.java</exclude>
                         <exclude>**/*IT.java</exclude>
                     </excludes>
                 </configuration>
