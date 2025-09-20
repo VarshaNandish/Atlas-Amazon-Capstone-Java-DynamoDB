@@ -1,0 +1,41 @@
+version: "3.8"
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock      # allow Jenkins to build images on host
+      - m2_repo:/var/m2                                # optional maven cache
+    depends_on:
+      - dynamodb-local
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/login || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  dynamodb-local:
+    image: amazon/dynamodb-local
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    command: "-jar DynamoDBLocal.jar -inMemory -sharedDb"
+    volumes:
+      - dynamodb_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  jenkins_home:
+  dynamodb_data:
+  m2_repo:
