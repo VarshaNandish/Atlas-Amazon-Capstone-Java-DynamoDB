@@ -1,6 +1,5 @@
 package com.atlas.tests;
 
-import com.atlas.model.Course;
 import com.atlas.repository.DynamoCourseDao;
 import com.atlas.repository.DynamoLogDao;
 import com.atlas.repository.DynamoStudentDao;
@@ -28,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class EnrollmentFlowsIntegrationTest {
+public class EnrollmentFlowsIT {
 
     private DynamoDbClient client;
     private DynamoStudentDao studentDao;
