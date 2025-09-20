@@ -6,11 +6,11 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.net.URI;
-import java.util.Objects;
 
 public final class DynamoDBClientUtil {
-    private static volatile DynamoDbClient client;
-    private DynamoDBClientUtil() {}
+
+    // ✅ shared static client
+    private static DynamoDbClient client;
 
     public static DynamoDbClient client() {
         if (client == null) {
@@ -21,14 +21,27 @@ public final class DynamoDBClientUtil {
                     if (endpoint == null || endpoint.isBlank()) {
                         endpoint = "http://localhost:8000"; // default for local dev
                     }
+
                     client = DynamoDbClient.builder()
                             .endpointOverride(URI.create(endpoint))
                             .region(Region.AP_SOUTH_1)
-                            .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("dummy", "dummy")))
+                            .credentialsProvider(
+                                    StaticCredentialsProvider.create(
+                                            AwsBasicCredentials.create("dummy", "dummy")
+                                    )
+                            )
                             .build();
                 }
             }
         }
         return client;
+    }
+
+    // ✅ Close client when app exits
+    public static void closeClient() {
+        if (client != null) {
+            client.close();
+            client = null;
+        }
     }
 }
