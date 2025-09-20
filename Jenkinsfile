@@ -17,6 +17,30 @@ pipeline {
       post { always { junit 'target/surefire-reports/*.xml' } }
     }
 
+
+
+    stage('Start DynamoDB') {
+  steps {
+    // start only the dynamodb service from your docker-compose (or docker run)
+    sh '''
+      echo "Starting dynamodb-local container..."
+      docker-compose -f docker-compose.yml up -d dynamodb-local || docker run -d --name dynamodb-local -p 8000:8000 amazon/dynamodb-local
+      # wait for tcp port 8000
+      echo "Waiting for DynamoDB endpoint..."
+      for i in $(seq 1 30); do
+        if curl -sS --max-time 2 http://localhost:8000/ >/dev/null 2>&1; then
+          echo "DynamoDB is up"
+          break
+        fi
+        echo "waiting... ($i)"
+        sleep 1
+      done
+    '''
+  }
+}
+
+
+
     stage('Integration Tests') {
   steps {
     sh "${tool 'Maven3'}/bin/mvn -B -DskipITs=false verify"
