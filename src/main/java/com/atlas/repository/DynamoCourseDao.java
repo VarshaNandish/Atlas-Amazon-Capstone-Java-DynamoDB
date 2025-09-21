@@ -96,4 +96,12 @@ public class DynamoCourseDao implements CourseDao {
         List<AttributeValue> av = newWaitlist.stream().map(s -> AttributeValue.builder().s(s).build()).collect(Collectors.toList());
         client.updateItem(UpdateItemRequest.builder().tableName(table).key(key).updateExpression("SET waitlistIds = :wl").expressionAttributeValues(Map.of(":wl", AttributeValue.builder().l(av).build())).build());
     }
+
+    /**
+     * Delete a course item by courseId. Used by integration tests to clean up test data.
+     */
+    public void deleteById(String courseId) {
+        Map<String, AttributeValue> key = Map.of("courseId", AttributeValue.builder().s(courseId).build());
+        client.deleteItem(DeleteItemRequest.builder().tableName(table).key(key).build());
+    }
 }
