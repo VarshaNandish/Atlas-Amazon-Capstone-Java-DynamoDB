@@ -14,8 +14,8 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 import java.time.LocalDate;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration tests using DynamoDB Local.
  * Each test creates its own course item with all required attributes including a future latestEnrollmentBy.
  */
-
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class EnrollmentFlowsIntegrationTest {
@@ -36,6 +35,12 @@ public class EnrollmentFlowsIntegrationTest {
     private StudentService studentService;
     private EnrollmentService enrollmentService;
     private CourseService courseService;
+
+    /**
+     * Collect IDs of courses created by tests, to be removed in @AfterEach.
+     * Use a thread-safe list in case of parallel test execution.
+     */
+    private final List<String> createdCourseIds = new CopyOnWriteArrayList<>();
 
     @BeforeAll
     void setup() {
@@ -56,12 +61,23 @@ public class EnrollmentFlowsIntegrationTest {
         courseService = new CourseService(courseDao);
     }
 
+    @AfterEach
+    void cleanupCreatedCourses() {
+        // Best-effort cleanup. Do not throw from cleanup to avoid masking test failures.
+        for (String id : createdCourseIds) {
+            try {
+                courseDao.deleteById(id);
+            } catch (Exception ex) {
+                System.err.println("Failed to delete test course " + id + ": " + ex.getMessage());
+            }
+        }
+        createdCourseIds.clear();
+    }
+
     /**
      * Helper: create a full course item in Dynamo with latestEnrollmentBy set to future date.
      * Insert temporary courses to cover edge cases.
      */
-
-
     private void putCourseDirectly(String courseId, String courseName, int maxSeats) {
         // ensure latestEnrollmentBy is in the future (30 days from today)
         String futureIso = LocalDate.now().plusDays(30).toString(); // yyyy-MM-dd
@@ -75,6 +91,9 @@ public class EnrollmentFlowsIntegrationTest {
                 "latestEnrollmentBy", AttributeValue.builder().s(futureIso).build()
         );
         client.putItem(PutItemRequest.builder().tableName("Courses").item(item).build());
+
+        // mark for cleanup
+        createdCourseIds.add(courseId);
     }
 
     @Test
