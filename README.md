@@ -168,21 +168,6 @@ mvn test
 
 ---
 
-## 🔗 System Architecture (CI/CD)
-
-```mermaid
-flowchart TD
-    Developer[👩‍💻 Developer pushes code to GitHub] --> Jenkins[Jenkins CI/CD]
-    Jenkins -->|Run Tests (JUnit5)| Maven[Maven Build]
-    Jenkins -->|Build Image| Docker[Docker Engine]
-    Docker -->|Run Jenkins| Jenkins[Jenkins on :8080]
-    Docker -->|Run DB| Dynamo[DynamoDB Local on :8000]
-    Jenkins -->|Pipeline Logs| JenkinsUI[Jenkins UI :8080]
-    Docker --> DockerDesktop[Docker Desktop Monitoring]
-```
-
----
-
 ## 📌 Notes
 
 - Jenkins uses **port 8080**  
@@ -195,4 +180,5 @@ flowchart TD
 
 ## 📜 License
 
-MIT License – free to use and modify for learning/demo purposes.
+MIT License – feel free to fork, modify and use for learning/demo purposes.
+
