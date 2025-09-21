@@ -29,24 +29,37 @@ public class App {
 
         Scanner sc = new Scanner(System.in);
         while (true) {
-            System.out.println("\n1) Sign Up  2) Login  3) Exit");
+            System.out.println("\n1) Sign Up  2) Login  3) View courses  4) Exit");
             System.out.print("Choose: ");
             String ch = sc.nextLine().trim();
             try {
-                if ("1".equals(ch)) doSignup(sc, studentService);
-                else if ("2".equals(ch)) {
+                if ("1".equals(ch)) {
+                    doSignup(sc, studentService);
+                } else if ("2".equals(ch)) {
                     String token = doLogin(sc, studentService);
                     if (token != null) studentMenu(sc, token, studentService, courseService, enrollmentService);
                 } else if ("3".equals(ch)) {
+                    // show available courses to unauthenticated user
+                    List<Course> courses = courseService.list();
+                    if (courses == null || courses.isEmpty()) {
+                        System.out.println("No courses available at the moment.");
+                    } else {
+                        System.out.println("Available courses:");
+                        courses.forEach(System.out::println);
+                    }
+                } else if ("4".equals(ch)) {
                     System.out.println("Goodbye — thanks for using Atlas Academy!");
                     com.atlas.repository.DynamoDBClientUtil.closeClient();
                     return;
-                } else System.out.println("Invalid option");
+                } else {
+                    System.out.println("Invalid option");
+                }
             } catch (Exception ex) {
                 System.out.println("Error: " + ex.getMessage());
             }
         }
     }
+
 
     private static void doSignup(Scanner sc, StudentService studentService) {
         System.out.print("StudentId: "); String id = sc.nextLine().trim();
