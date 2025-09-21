@@ -1,105 +1,198 @@
-# Student Course Registration System
+# 📚 Student Course Registration System
 
-## Overview
-This is a **console-based Student Course Registration System** implemented in Java (Maven project) with DynamoDB Local as the database.  
-It allows students to sign up, log in, view available courses, enroll, drop, and manage waitlists. All key actions are logged in an audit log.
+A Java-based **console and web application (demo UI)** that simulates a **Student Course Registration System** with 
+enrollment, waitlisting, and profile management. Built with **Maven**, uses **DynamoDB Local** as the datastore, and 
+supports both **console interaction** and a lightweight **web UI** built with [Spark Java](http://sparkjava.com/).  
+The project demonstrates how to integrate **Java, DynamoDB Local, Docker, and Jenkins** into a CI/CD pipeline.  
 
-### Features
-- Student sign up & login (passwords hashed with bcrypt)
-- Profile view with enrollments, waitlists, dropped/completed courses
-- Preloaded courses stored in DynamoDB Local
-- Course enrollment with limits and cutoffs
-- FIFO waitlist management with auto-promotion
-- Drop courses with waitlist promotion
-- Audit logging of all actions (DynamoDB `StudentLogs` table)
-- Session handling with in-memory tokens (expiry 30 mins)
-- JUnit tests for core flows
+The application runs in **two modes**:
+- **Console Application** → interactive student signup, login, enroll/drop
+- **WebApp Demo UI (Spark Java)** → runs in the browser with simple HTML (inline CSS)
 
 ---
 
-## Requirements
+## 🚀 Features
+
+- **Student Operations**
+  - Signup, login, logout
+  - View profile & enrolled courses
+  - Enroll into or drop courses (with seat limits, deadlines, waitlist)
+
+- **Course Management**
+  - Preloaded courses from `seed-courses.json`
+  - Enforces enrollment limits and deadlines
+
+- **Infrastructure**
+  - **DynamoDB Local** as the persistence layer (runs locally or via Docker)
+  - **JUnit 5** testing (unit & integration)
+  - **Jenkins CI/CD pipeline** with automated build, test, and deploy
+  - **Dockerized deployment**
+
+- **WebApp Demo UI**
+  - Built with **Spark Java**
+  - Accessible at [http://localhost:3000](...)
+  - Provides routes:
+    - `/` → Home  
+    - `/courses` → View all courses  
+    - `/signup` → Student signup form  
+    - `/login` → Login form  
+    - `/profile` → Profile page with enroll/drop forms  
+  - **Inline CSS** written inside `WebApp.java` (no separate CSS/JS files)
+
+---
+
+## 🛠️ Tech Stack
+
 - **Java 17**
-- **Maven 3.9+**
-- **AWS CLI**
-- **DynamoDB Local** (running on `http://localhost:8000`)
+- **Maven**
+- **JUnit 5**
+- **DynamoDB Local**
+- **Docker & Docker Compose**
+- **Jenkins**
+- **Spark Java (for demo UI)**
 
 ---
 
-## Setup Instructions
+## 📂 Project Structure
 
-### 1. Clone the repository
+```
+src/
+ ├── main/java/com/atlas
+ │   ├── app/              # Console App (App.java)
+ │   ├── dao/              # DAO interfaces
+ │   ├── exception/        # Custom exceptions
+ │   ├── model/            # Entities (Student, Course, Logs)
+ │   ├── repository/       # DynamoDB DAO implementations
+ │   ├── service/          # Business logic
+ │   └── web/              # WebApp.java (Spark-based demo UI, inline CSS/HTML)
+ │
+ ├── main/resources
+ │   └── seed-courses.json # Preloaded course data
+ │
+ └── test/java/com/atlas
+     ├── tests/            # JUnit 5 tests (integration + unit)
+     └── testutil/         # In-memory DAO fakes for testing
+
+Other supporting files:
+ ├── pom.xml               # Maven build configuration
+ ├── Jenkinsfile           # CI/CD pipeline definition
+ ├── Dockerfile            # App container definition
+ ├── docker-compose.yml    # Orchestration (Jenkins + DynamoDB + App)
+ ├── README.md             # Project documentation
+```
+
+---
+
+## ⚡ Getting Started
+
+### Clone and Build
 ```bash
-git clone <your-repo-url>
-cd student-course-registration
-```
-
-### 2. Start DynamoDB Local
-From the folder where you downloaded DynamoDB Local:
-```powershell
-java "-Djava.library.path=./DynamoDBLocal_lib" -jar ./DynamoDBLocal.jar -sharedDb -dbPath ./local_db
-```
-*(or use `-inMemory` for temporary DB with no persistence)*
-
-### 3. Create tables
-```powershell
-aws dynamodb create-table --table-name Students --attribute-definitions AttributeName=id,AttributeType=S --key-schema AttributeName=id,KeyType=HASH --billing-mode PAY_PER_REQUEST --endpoint-url http://localhost:8000 --region ap-south-1
-
-aws dynamodb create-table --table-name Courses --attribute-definitions AttributeName=courseId,AttributeType=S --key-schema AttributeName=courseId,KeyType=HASH --billing-mode PAY_PER_REQUEST --endpoint-url http://localhost:8000 --region ap-south-1
-
-aws dynamodb create-table --table-name StudentLogs --attribute-definitions AttributeName=logId,AttributeType=S --key-schema AttributeName=logId,KeyType=HASH --billing-mode PAY_PER_REQUEST --endpoint-url http://localhost:8000 --region ap-south-1
-```
-
-### 4. Build and run
-```bash
+git clone https://github.com/<your-username>/StudentCourseRegistrationSystem.git
+cd StudentCourseRegistrationSystem
 mvn clean install
-mvn compile exec:java -Dexec.mainClass="com.academy.app.App"
 ```
+
+### Run Console App
+```bash
+java -cp target/StudentCourseRegistrationSystem-1.0-SNAPSHOT.jar com.atlas.app.App
+```
+
+### Run WebApp (Spark)
+```bash
+java -cp target/StudentCourseRegistrationSystem-1.0-SNAPSHOT.jar com.atlas.web.WebApp
+```
+Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Project Structure
+## 🐳 Running with Docker
+
+### Build Docker image
+```bash
+docker build -t student-course-registry .
 ```
-student-course-registration/
-├── pom.xml
-├── README.md
-├── src/
-│   ├── main/java/com/academy/
-│   │   ├── app/        # Main CLI (App.java)
-│   │   ├── dao/        # DynamoDBClientUtil, StudentDao, CourseDao, LogDao
-│   │   ├── exception/  # Custom exceptions
-│   │   ├── model/      # Student, Course, StudentLog, etc.
-│   │   └── service/    # StudentService, CourseService, EnrollmentService, etc.
-│   └── test/java/com/academy/ # Unit tests
-└── .gitignore
+
+### Run with DynamoDB Local
+```bash
+docker run -d -p 8000:8000 --name dynamodb amazon/dynamodb-local
+docker run -d -p 3000:3000 student-course-registry
 ```
+
+### Orchestrate with Docker Compose
+```bash
+docker-compose up -d
+```
+
+This starts:
+- Jenkins UI → [http://localhost:8080](http://localhost:8080)
+- DynamoDB Local → [http://localhost:8000](http://localhost:8000)
+- Student App (Spark UI) → [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## Testing
-Run unit tests:
+## 🔄 CI/CD Pipeline (Jenkins)
+
+Jenkins pipeline defined in Jenkinsfile:
+1. Checkout code from GitHub
+2. Run **JUnit 5** tests
+3. Package `.jar` + build Docker image
+4. Run DynamoDB Local (if not running)
+5. Deploy app container
+6. Cleanup after tests
+
+- Builds and logs → **Jenkins UI**
+- Containers and volumes → **Docker Desktop**
+
+---
+
+## ✅ Testing
+
+Run all tests:
 ```bash
 mvn test
 ```
 
-At least 5 JUnit tests are provided for:
-- Signup & login
-- Enroll (available seat)
-- Enroll (waitlist)
-- Drop (with promotion)
-- Duplicate/limit checks
+- Integration tests spin up a **DynamoDB Local** instance.  
+- Coverage includes:
+  - Authentication & session handling
+  - Seat capacity and waitlist promotion
+  - Enrollment deadlines
 
 ---
 
-## Demo Script (for examiners/trainers)
-1. Start DynamoDB Local and create tables.  
-2. Run the app.  
-3. Sign up 3 students.  
-4. Enroll 2 in a course with 2 seats.  
-5. Try enrolling a 3rd → goes to waitlist.  
-6. Drop one enrolled → waitlisted student auto-enrolled.  
-7. Show audit logs in `StudentLogs` table.
+## 📊 Monitoring
+
+- **Jenkins UI** → Pipeline status, logs  
+- **Docker Desktop** → Container & volume status  
+- **Console/Web logs** → Runtime logs  
 
 ---
 
-## License
-Educational use only. For capstone/demo purposes.
+## 🔗 System Architecture (CI/CD)
+
+```mermaid
+flowchart TD
+    Developer[👩‍💻 Developer pushes code to GitHub] --> Jenkins[Jenkins CI/CD]
+    Jenkins -->|Run Tests (JUnit5)| Maven[Maven Build]
+    Jenkins -->|Build Image| Docker[Docker Engine]
+    Docker -->|Run Jenkins| Jenkins[Jenkins on :8080]
+    Docker -->|Run DB| Dynamo[DynamoDB Local on :8000]
+    Jenkins -->|Pipeline Logs| JenkinsUI[Jenkins UI :8080]
+    Docker --> DockerDesktop[Docker Desktop Monitoring]
+```
+
+---
+
+## 📌 Notes
+
+- Jenkins uses **port 8080**  
+- Spark WebApp uses **port 3000** (configurable)  
+- DynamoDB Local uses **port 8000**  
+- Console app and WebApp can be run independently  
+- All commits are tracked in **GitHub repo** with updated pipeline configs  
+
+---
+
+## 📜 License
+
+MIT License – free to use and modify for learning/demo purposes.
