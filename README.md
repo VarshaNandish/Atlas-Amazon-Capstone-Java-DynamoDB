@@ -6,8 +6,8 @@ supports both **console interaction** and a lightweight **web UI** built with [S
 The project demonstrates how to integrate **Java, DynamoDB Local, Docker, and Jenkins** into a CI/CD pipeline.
 
 The application runs in **two modes**:
-- **Console Application** → interactive student signup, login, enroll/drop
-- **WebApp Demo UI (Spark Java)** → runs in the browser with simple HTML (inline CSS)
+- **Console Application** → interactive student signup, login, enroll/drop.
+- **WebApp Demo UI (Spark Java)** → runs in the browser with simple HTML (inline CSS).
 
 ---
 
@@ -181,4 +181,5 @@ mvn test
 ## 📜 License
 
 MIT License – feel free to fork, modify and use for learning/demo purposes.
+
 
