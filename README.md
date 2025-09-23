@@ -1,9 +1,9 @@
 # 📚 Student Course Registration System
 
-A Java-based **console and web application (demo UI)** that simulates a **Student Course Registration System** with 
-enrollment, waitlisting, and profile management. Built with **Maven**, uses **DynamoDB Local** as the datastore, and 
+A Java-based **console and web application (demo UI)** that simulates a **Student Course Registration System** with
+enrollment, waitlisting, and profile management. Built with **Maven**, uses **DynamoDB Local** as the datastore, and
 supports both **console interaction** and a lightweight **web UI** built with [Spark Java](http://sparkjava.com/).  
-The project demonstrates how to integrate **Java, DynamoDB Local, Docker, and Jenkins** into a CI/CD pipeline.  
+The project demonstrates how to integrate **Java, DynamoDB Local, Docker, and Jenkins** into a CI/CD pipeline.
 
 The application runs in **two modes**:
 - **Console Application** → interactive student signup, login, enroll/drop
@@ -14,30 +14,30 @@ The application runs in **two modes**:
 ## 🚀 Features
 
 - **Student Operations**
-  - Signup, login, logout
-  - View profile & enrolled courses
-  - Enroll into or drop courses (with seat limits, deadlines, waitlist)
+    - Signup, login, logout
+    - View profile & enrolled courses
+    - Enroll into or drop courses (with seat limits, deadlines, waitlist)
 
 - **Course Management**
-  - Preloaded courses from `seed-courses.json`
-  - Enforces enrollment limits and deadlines
+    - Preloaded courses from `seed-courses.json`
+    - Enforces enrollment limits and deadlines
 
 - **Infrastructure**
-  - **DynamoDB Local** as the persistence layer (runs locally or via Docker)
-  - **JUnit 5** testing (unit & integration)
-  - **Jenkins CI/CD pipeline** with automated build, test, and deploy
-  - **Dockerized deployment**
+    - **DynamoDB Local** as the persistence layer (runs locally or via Docker)
+    - **JUnit 5** testing (unit & integration)
+    - **Jenkins CI/CD pipeline** with automated build, test, and deploy
+    - **Dockerized deployment**
 
 - **WebApp Demo UI**
-  - Built with **Spark Java**
-  - Accessible at [http://localhost:3000](...)
-  - Provides routes:
-    - `/` → Home  
-    - `/courses` → View all courses  
-    - `/signup` → Student signup form  
-    - `/login` → Login form  
-    - `/profile` → Profile page with enroll/drop forms  
-  - **Inline CSS** written inside `WebApp.java` (no separate CSS/JS files)
+    - Built with **Spark Java**
+    - Accessible at [http://localhost:3000](...)
+    - Provides routes:
+        - `/` → Home
+        - `/courses` → View all courses
+        - `/signup` → Student signup form
+        - `/login` → Login form
+        - `/profile` → Profile page with enroll/drop forms
+    - **Inline CSS** written inside `WebApp.java` (no separate CSS/JS files)
 
 ---
 
@@ -152,29 +152,29 @@ Run all tests:
 mvn test
 ```
 
-- Integration tests spin up a **DynamoDB Local** instance.  
+- Integration tests spin up a **DynamoDB Local** instance.
 - Coverage includes:
-  - Authentication & session handling
-  - Seat capacity and waitlist promotion
-  - Enrollment deadlines
+    - Authentication & session handling
+    - Seat capacity and waitlist promotion
+    - Enrollment deadlines
 
 ---
 
 ## 📊 Monitoring
 
-- **Jenkins UI** → Pipeline status, logs  
-- **Docker Desktop** → Container & volume status  
-- **Console/Web logs** → Runtime logs  
+- **Jenkins UI** → Pipeline status, logs
+- **Docker Desktop** → Container & volume status
+- **Console/Web logs** → Runtime logs
 
 ---
 
 ## 📌 Notes
 
-- Jenkins uses **port 8080**  
-- Spark WebApp uses **port 3000** (configurable)  
-- DynamoDB Local uses **port 8000**  
-- Console app and WebApp can be run independently  
-- All commits are tracked in **GitHub repo** with updated pipeline configs  
+- Jenkins uses **port 8080**
+- Spark WebApp uses **port 3000** (configurable)
+- DynamoDB Local uses **port 8000**
+- Console app and WebApp can be run independently
+- All commits are tracked in **GitHub repo** with updated pipeline configs
 
 ---
 
